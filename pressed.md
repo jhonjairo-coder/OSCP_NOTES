@@ -1,6 +1,6 @@
-#PRESSED
+# PRESSED
 
-###Maquina pressed de HTB hard 
+### Maquina pressed de HTB hard 
 
 ```
 Hard
@@ -13,10 +13,10 @@ WordPress XML-RPC Create WebShell
 PwnKit Exploit
 ```
 
-#Reconnaissance
+# Reconnaissance
 
 ```markdown
-# Nmap 7.94SVN scan initiated Fri Jun  7 19:11:26 2024 as: nmap -sCV -oN target 10.10.11.142
+ Nmap 7.94SVN scan initiated Fri Jun  7 19:11:26 2024 as: nmap -sCV -oN target 10.10.11.142
 Nmap scan report for 10.10.11.142
 Host is up 0.17s latency).
 Not shown: 999 filtered tcp ports ((no-response)
@@ -52,13 +52,20 @@ PORT   STATE SERVICE
 
 ```
 
-#Construccion de la pagina web 
+# Construccion de la pagina web 
 
-###Comando para validar en que esta construida la pagina, nos estamos enfrentando a una pagina construida en wordpress 
+### Comando para validar en que esta construida la pagina, nos estamos enfrentando a una pagina construida en wordpress 
+
 `whatweb  http://10.10.11.142`
 
 ```
 http://10.10.11.142 [200 OK] Apache[2.4.41], Country[RESERVED][ZZ], HTML5, HTTPServer[Ubuntu Linux][Apache/2.4.41 (Ubuntu)], IP[10.10.11.142], JQuery[3.6.0], MetaGenerator[WordPress 5.9], Script[text/javascript], Title[UHC Jan Finals &#8211; New Month, New Boxes], UncommonHeaders[link], WordPress[5.9]
 
 ```
+### La pagina nos muestra todas las peticiones http que se estan realizando, entonces con cul podemos tirarle varias peticiones.
 
+`curl -s -X GET 'http://10.10.11.142' -H 'User-Agent: super'`
+
+### Como la pagina esta en wordpress podemos indentificar vulnerabilidades con `wpscan`
+
+``
